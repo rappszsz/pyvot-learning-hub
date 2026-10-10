@@ -1,12 +1,13 @@
 import { useRef, useState } from 'react'
+import { useCourseCatalog } from '../context/CourseContext.jsx'
+import { API_BASE_URL } from '../lib/api.js'
 
-function FileDropzone({ accept, file, label, name, onChange, onDrop }) {
+function FileDropzone({ accept, files, label, name, onChange, onRemove }) {
   const inputRef = useRef(null)
 
   function handleDrop(event) {
     event.preventDefault()
-    const droppedFile = event.dataTransfer.files[0]
-    if (droppedFile) onDrop(droppedFile)
+    onChange(event.dataTransfer.files)
   }
 
   return (
@@ -21,8 +22,12 @@ function FileDropzone({ accept, file, label, name, onChange, onDrop }) {
           ref={inputRef}
           accept={accept}
           className="sr-only"
+          multiple
           name={name}
-          onChange={(event) => onChange(event.target.files[0] ?? null)}
+          onChange={(event) => {
+            onChange(event.target.files ?? [])
+            event.target.value = ''
+          }}
           type="file"
         />
         <div aria-hidden="true" className="mx-auto mb-3 grid size-10 place-items-center rounded-full bg-[#f2eafa] text-primary">
@@ -31,31 +36,35 @@ function FileDropzone({ accept, file, label, name, onChange, onDrop }) {
           </svg>
         </div>
         <p className="text-sm font-medium text-text">
-          {file ? file.name : 'Drop a file here or'}{' '}
-          {!file && (
-            <button
-              className="font-semibold text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
-              onClick={() => inputRef.current?.click()}
-              type="button"
-            >
-              browse
-            </button>
-          )}
-        </p>
-        <p className="mt-1 text-xs text-slate-500">
-          {file ? `${(file.size / (1024 * 1024)).toFixed(1)} MB selected` : 'Choose a file from your device'}
-        </p>
-        {file && (
+          Drop files here or{' '}
           <button
-            className="mt-2 text-xs font-semibold text-primary hover:underline"
-            onClick={() => {
-              onChange(null)
-              if (inputRef.current) inputRef.current.value = ''
-            }}
+            className="font-semibold text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
+            onClick={() => inputRef.current?.click()}
             type="button"
           >
-            Remove file
+            browse
           </button>
+        </p>
+        <p className="mt-1 text-xs text-slate-500">
+          {files.length ? `${files.length} file${files.length === 1 ? '' : 's'} selected` : 'Choose one or more files from your device'}
+        </p>
+        {files.length > 0 && (
+          <ul aria-label={`Selected ${label.toLowerCase()} files`} className="mt-4 max-h-40 space-y-2 overflow-y-auto text-left">
+            {files.map((file, index) => (
+              <li className="flex items-center justify-between gap-3 rounded-xl bg-background px-3 py-2 text-xs" key={`${file.name}-${file.lastModified}-${index}`}>
+                <span className="min-w-0 flex-1 truncate" title={file.name}>
+                  {file.name} <span className="text-slate-500">({(file.size / (1024 * 1024)).toFixed(1)} MB)</span>
+                </span>
+                <button
+                  className="shrink-0 font-semibold text-primary hover:underline"
+                  onClick={() => onRemove(index)}
+                  type="button"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
@@ -63,34 +72,33 @@ function FileDropzone({ accept, file, label, name, onChange, onDrop }) {
 }
 
 function InstructorUpload() {
-  const [video, setVideo] = useState(null)
-  const [pdf, setPdf] = useState(null)
+  const { refreshCourses } = useCourseCatalog()
+  const [videoFiles, setVideoFiles] = useState([])
+  const [pdfFiles, setPdfFiles] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
 
   async function handleSubmit(event) {
     event.preventDefault()
+    const form = event.currentTarget
     setIsSubmitting(true)
     setSuccessMessage('')
     setErrorMessage('')
 
-    const formData = new FormData(event.currentTarget)
-
-    if (video) {
-      formData.set('lessonVideo', video)
-    } else {
-      formData.delete('lessonVideo')
+    const formData = new FormData(form)
+    formData.delete('videos[]')
+    formData.delete('pdfs[]')
+    formData.delete('thumbnail')
+    const thumbnail = form.elements.namedItem('thumbnail').files[0]
+    if (thumbnail) {
+      formData.append('thumbnail', thumbnail)
     }
-
-    if (pdf) {
-      formData.set('studyMaterial', pdf)
-    } else {
-      formData.delete('studyMaterial')
-    }
+    videoFiles.forEach((file) => formData.append('videos[]', file))
+    pdfFiles.forEach((file) => formData.append('pdfs[]', file))
 
     try {
-      const response = await fetch('http://localhost:8000/api/courses', {
+      const response = await fetch(`${API_BASE_URL}/api/courses`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -102,7 +110,11 @@ function InstructorUpload() {
         throw new Error(validationErrors.join(' ') || result.message || 'Upload failed. Please try again.')
       }
 
+      refreshCourses()
       setSuccessMessage(result.message || 'Course material uploaded successfully.')
+      setVideoFiles([])
+      setPdfFiles([])
+      form.reset()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Upload failed. Please try again.')
     } finally {
@@ -110,11 +122,18 @@ function InstructorUpload() {
     }
   }
 
-  function handleChange(setFile) {
-    return (file) => {
-      setFile(file)
+  function handleChange(setFiles) {
+    return (newFiles) => {
+      const incomingFiles = Array.from(newFiles)
+      setFiles((previousFiles) => [...previousFiles, ...incomingFiles])
       setSuccessMessage('')
       setErrorMessage('')
+    }
+  }
+
+  function handleRemove(setFiles) {
+    return (indexToRemove) => {
+      setFiles((previousFiles) => previousFiles.filter((_, index) => index !== indexToRemove))
     }
   }
 
@@ -148,6 +167,15 @@ function InstructorUpload() {
                     required
                   />
                 </label>
+                <label className="mb-5 block text-sm font-semibold text-text" htmlFor="course-track">
+                  Category or track
+                  <input
+                    className="mt-2 block w-full rounded-pill border border-subtle-border bg-background px-4 py-3 font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                    id="course-track"
+                    name="category_track"
+                    placeholder="e.g. Product Design"
+                  />
+                </label>
                 <label className="block text-sm font-semibold text-text" htmlFor="course-description">
                   Description
                   <textarea
@@ -158,6 +186,19 @@ function InstructorUpload() {
                     required
                     rows="4"
                   />
+                </label>
+                <label className="mt-5 block text-sm font-semibold text-text" htmlFor="course-thumbnail">
+                  Course Thumbnail Image
+                  <input
+                    accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+                    className="mt-2 block w-full rounded-xl border border-subtle-border bg-background px-4 py-3 font-normal file:mr-4 file:rounded-pill file:border-0 file:bg-[#f2eafa] file:px-4 file:py-2 file:font-semibold file:text-primary"
+                    id="course-thumbnail"
+                    name="thumbnail"
+                    type="file"
+                  />
+                  <span className="mt-1 block text-xs font-normal text-slate-500">
+                    JPG or PNG, up to 2 MB.
+                  </span>
                 </label>
               </section>
 
@@ -203,20 +244,20 @@ function InstructorUpload() {
               </div>
               <div className="space-y-5">
                 <FileDropzone
-                  accept="video/*"
-                  file={video}
-                  label="Video lesson"
-                  name="lessonVideo"
-                  onChange={handleChange(setVideo)}
-                  onDrop={handleChange(setVideo)}
+                  accept="video/mp4,video/quicktime,video/x-msvideo,.mp4,.mov,.avi"
+                  files={videoFiles}
+                  label="Video lessons"
+                  name="videos[]"
+                  onChange={handleChange(setVideoFiles)}
+                  onRemove={handleRemove(setVideoFiles)}
                 />
                 <FileDropzone
                   accept="application/pdf,.pdf"
-                  file={pdf}
-                  label="Study material (PDF)"
-                  name="studyMaterial"
-                  onChange={handleChange(setPdf)}
-                  onDrop={handleChange(setPdf)}
+                  files={pdfFiles}
+                  label="Study materials (PDF)"
+                  name="pdfs[]"
+                  onChange={handleChange(setPdfFiles)}
+                  onRemove={handleRemove(setPdfFiles)}
                 />
               </div>
               {successMessage && (
@@ -234,7 +275,7 @@ function InstructorUpload() {
                 disabled={isSubmitting}
                 type="submit"
               >
-                {isSubmitting ? 'Uploading...' : 'Save course material'}
+                {isSubmitting ? 'Uploading...' : 'Save course'}
               </button>
               <p className="mt-3 text-center text-xs text-slate-500">Your lesson files will be uploaded to the course storage.</p>
             </aside>

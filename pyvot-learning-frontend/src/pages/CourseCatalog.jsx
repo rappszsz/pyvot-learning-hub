@@ -13,14 +13,21 @@ function CourseCatalog() {
       <ul className="grid gap-5 sm:grid-cols-2">
         {courses.map((course) => (
           <li key={course.id} className="rounded border border-slate-200 bg-white p-5">
+            {course.category_track && (
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {course.category_track}
+              </p>
+            )}
             <h2 className="text-lg font-semibold">{course.title}</h2>
             <p className="mt-2 text-sm text-slate-600">{course.description}</p>
-            <p className="mt-4 text-sm">Instructor: {course.instructor}</p>
+            <p className="mt-4 text-sm">
+              {course.lessons.length} {course.lessons.length === 1 ? 'lesson' : 'lessons'}
+            </p>
             <Link
               className="mt-5 inline-block text-sm font-semibold text-blue-700 hover:underline"
               to={`/courses/${course.id}`}
             >
-              View course
+              View Course
             </Link>
           </li>
         ))}
