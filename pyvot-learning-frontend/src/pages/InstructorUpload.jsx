@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useCourseCatalog } from '../context/CourseContext.jsx'
-import { API_BASE_URL } from '../lib/api.js'
+import { API_BASE_URL, fetchWithCsrf } from '../lib/api.js'
 
 function FileDropzone({ accept, files, label, name, onChange, onRemove }) {
   const inputRef = useRef(null)
@@ -98,10 +98,9 @@ function InstructorUpload() {
     pdfFiles.forEach((file) => formData.append('pdfs[]', file))
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/courses`, {
+      const response = await fetchWithCsrf(`${API_BASE_URL}/api/courses`, {
         method: 'POST',
         body: formData,
-        credentials: 'include',
       })
       const result = await response.json()
 

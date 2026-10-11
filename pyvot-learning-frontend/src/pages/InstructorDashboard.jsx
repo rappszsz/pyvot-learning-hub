@@ -1,113 +1,93 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { API_BASE_URL } from '../lib/api.js'
+import { useCourseCatalog } from '../context/CourseContext.jsx'
+import { API_BASE_URL, fetchWithCsrf } from '../lib/api.js'
 
 function InstructorDashboard() {
-  const [materials, setMaterials] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [editingMaterialId, setEditingMaterialId] = useState(null)
-  const [editedTitle, setEditedTitle] = useState('')
+  const {
+    courses,
+    isLoading,
+    errorMessage,
+    updateCourse,
+    removeCourse,
+    restoreCourse,
+  } = useCourseCatalog()
+  const [editingCourse, setEditingCourse] = useState(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
   const [isSavingEdit, setIsSavingEdit] = useState(false)
-  const [deletingMaterialId, setDeletingMaterialId] = useState(null)
+  const [deletingCourseId, setDeletingCourseId] = useState(null)
+  const [actionError, setActionError] = useState('')
 
-  useEffect(() => {
-    const controller = new AbortController()
+  function openEdit(course) {
+    setEditingCourse(course)
+    setEditTitle(course.title)
+    setEditDescription(course.description)
+    setActionError('')
+  }
 
-    async function loadMaterials() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/materials`, {
-          signal: controller.signal,
-        })
-        const result = await response.json()
+  async function handleEditSubmit(event) {
+    event.preventDefault()
+    setIsSavingEdit(true)
+    setActionError('')
 
-        if (!response.ok) {
-          throw new Error(result.message || 'Unable to load course materials.')
-        }
-        if (!Array.isArray(result.materials)) {
-          throw new Error('The materials response was not in the expected format.')
-        }
-
-        setMaterials(result.materials)
-      } catch (error) {
-        if (!(error instanceof Error && error.name === 'AbortError')) {
-          setErrorMessage(error instanceof Error ? error.message : 'Unable to load course materials.')
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false)
-        }
-      }
+    const formData = new FormData()
+    formData.append('_method', 'PATCH')
+    formData.append('title', editTitle)
+    formData.append('description', editDescription)
+    const thumbnail = event.currentTarget.elements.namedItem('thumbnail').files[0]
+    if (thumbnail) {
+      formData.append('thumbnail', thumbnail)
     }
 
-    loadMaterials()
-    return () => controller.abort()
-  }, [])
-
-  async function handleEditSubmit(event, material) {
-    event.preventDefault()
-    setErrorMessage('')
-    setIsSavingEdit(true)
-
     try {
-      const response = await fetch(`${API_BASE_URL}/api/materials/${material.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ title: editedTitle }),
+      const response = await fetchWithCsrf(`${API_BASE_URL}/api/courses/${editingCourse.id}`, {
+        method: 'POST',
+        body: formData,
       })
       const result = await response.json()
 
       if (!response.ok) {
         const validationErrors = Object.values(result.errors ?? {}).flat()
-        throw new Error(validationErrors.join(' ') || result.message || 'Unable to update this material.')
+        throw new Error(validationErrors.join(' ') || result.message || 'Unable to update this course.')
       }
-      if (!result.material || typeof result.material.title !== 'string') {
-        throw new Error('The material update response was not in the expected format.')
+      if (!result.course) {
+        throw new Error('The course update response was not in the expected format.')
       }
 
-      setMaterials((currentMaterials) =>
-        currentMaterials.map((currentMaterial) =>
-          currentMaterial.id === material.id ? result.material : currentMaterial,
-        ),
-      )
-      setEditingMaterialId(null)
+      updateCourse(editingCourse.id, result.course)
+      setEditingCourse(null)
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to update this material.')
+      setActionError(error instanceof Error ? error.message : 'Unable to update this course.')
     } finally {
       setIsSavingEdit(false)
     }
   }
 
-  async function handleDelete(material) {
-    if (!window.confirm(`Delete "${material.title}"? This cannot be undone.`)) {
-      return
-    }
+  async function handleDelete(courseId) {
+    const courseIndex = courses.findIndex((item) => String(item.id) === String(courseId))
+    const course = courses[courseIndex]
 
-    setErrorMessage('')
-    setDeletingMaterialId(material.id)
+    if (!course) return
+
+    removeCourse(courseId)
+    setDeletingCourseId(courseId)
+    setActionError('')
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/materials/${material.id}`, {
+      const response = await fetchWithCsrf(`${API_BASE_URL}/api/courses/${courseId}`, {
         method: 'DELETE',
-        credentials: 'include',
       })
       const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.message || 'Unable to delete this material.')
-      }
-
-      setMaterials((currentMaterials) =>
-        currentMaterials.filter((currentMaterial) => currentMaterial.id !== material.id),
-      )
-      if (editingMaterialId === material.id) {
-        setEditingMaterialId(null)
+        throw new Error(result.message || 'Unable to delete this course.')
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Unable to delete this material.')
+      restoreCourse(course, courseIndex)
+      setActionError(error instanceof Error ? error.message : 'Unable to delete this course.')
     } finally {
-      setDeletingMaterialId(null)
+      setDeletingCourseId(null)
     }
   }
 
@@ -115,114 +95,147 @@ function InstructorDashboard() {
     <section>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Instructor dashboard</h1>
-          <p className="mt-2 text-slate-600">View and manage your course materials.</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-primary">Instructor studio</p>
+          <h1 className="mt-2 text-3xl font-bold">Course management</h1>
+          <p className="mt-2 text-slate-600">Create, edit, and manage your courses and learning materials.</p>
         </div>
         <Link
-          className="rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-          to="/instructor/upload"
+          className="rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          to="/instructor/courses/create"
         >
-          Upload New Material
+          Create a course
         </Link>
       </div>
 
-      <section className="mt-10 max-w-3xl">
-        <h2 className="text-xl font-semibold">Managed lessons</h2>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link className="text-sm font-semibold text-blue-700 hover:underline" to="/instructor/materials">
+          Manage all materials
+        </Link>
+      </div>
 
-        {errorMessage && (
-          <p className="mt-4 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
-            {errorMessage}
-          </p>
-        )}
+      {actionError && (
+        <p className="mt-5 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+          {actionError}
+        </p>
+      )}
+      {isLoading ? (
+        <p className="mt-6 py-3 text-sm text-slate-600" role="status">Loading courses…</p>
+      ) : errorMessage ? (
+        <p className="mt-6 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{errorMessage}</p>
+      ) : courses.length === 0 ? (
+        <p className="mt-6 rounded bg-slate-50 p-5 text-sm text-slate-600">No courses have been created yet.</p>
+      ) : (
+        <ul className="mt-6 divide-y divide-slate-200 border-y border-slate-200">
+          {courses.map((course) => (
+            <li className="flex flex-wrap items-center justify-between gap-4 py-5" key={course.id}>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-semibold">{course.title}</h2>
+                <p className="mt-1 line-clamp-2 text-sm text-slate-600">{course.description}</p>
+                <p className="mt-2 text-xs text-slate-500">
+                  {course.materials.length} {course.materials.length === 1 ? 'material' : 'materials'}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  className="rounded border border-slate-300 px-3 py-2 text-sm font-semibold hover:bg-slate-50"
+                  to={`/instructor/courses/${course.id}`}
+                >
+                  Manage materials
+                </Link>
+                <button
+                  className="rounded border border-slate-300 px-3 py-2 text-sm font-semibold hover:bg-slate-50"
+                  onClick={() => openEdit(course)}
+                  type="button"
+                >
+                  Edit
+                </button>
+                <button
+                  className="rounded border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  disabled={deletingCourseId !== null}
+                  onClick={() => {
+                    if (window.confirm(`Delete "${course.title}"? This cannot be undone.`)) {
+                      handleDelete(course.id)
+                    }
+                  }}
+                  type="button"
+                >
+                  {String(deletingCourseId) === String(course.id) ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
-        {isLoading ? (
-          <p className="mt-4 py-3 text-sm text-slate-600" role="status">Loading course materials…</p>
-        ) : materials.length === 0 ? (
-          <p className="mt-4 py-3 text-sm text-slate-600">No course materials have been uploaded yet.</p>
-        ) : (
-          <ul className="mt-4 divide-y divide-slate-200 border-y border-slate-200">
-            {materials.map((material) => (
-              <li key={material.id} className="flex flex-wrap items-center gap-3 py-3 text-sm">
-                {material.mime_type.startsWith('video/') ? (
-                  <svg aria-hidden="true" className="size-5 shrink-0 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
-                    <rect x="3" y="5" width="13" height="14" rx="2" />
-                    <path d="m16 10 5-3v10l-5-3" />
-                  </svg>
-                ) : (
-                  <svg aria-hidden="true" className="size-5 shrink-0 text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
-                    <path d="M6 3h8l5 5v13H6z" />
-                    <path d="M14 3v6h5M8 15h8M8 18h6" />
-                  </svg>
-                )}
-
-                {editingMaterialId === material.id ? (
-                  <form
-                    className="flex min-w-0 flex-1 flex-wrap items-center gap-2"
-                    onSubmit={(event) => handleEditSubmit(event, material)}
-                  >
-                    <label className="sr-only" htmlFor={`material-title-${material.id}`}>Material title</label>
-                    <input
-                      autoFocus
-                      className="min-w-40 flex-1 rounded border border-slate-300 px-3 py-2"
-                      id={`material-title-${material.id}`}
-                      maxLength="255"
-                      onChange={(event) => setEditedTitle(event.target.value)}
-                      required
-                      value={editedTitle}
-                    />
-                    <button
-                      className="rounded bg-slate-900 px-3 py-2 font-semibold text-white disabled:opacity-50"
-                      disabled={isSavingEdit || deletingMaterialId !== null}
-                      type="submit"
-                    >
-                      {isSavingEdit ? 'Saving…' : 'Save'}
-                    </button>
-                    <button
-                      className="rounded border border-slate-300 px-3 py-2 font-semibold disabled:opacity-50"
-                      disabled={isSavingEdit || deletingMaterialId !== null}
-                      onClick={() => setEditingMaterialId(null)}
-                      type="button"
-                    >
-                      Cancel
-                    </button>
-                  </form>
-                ) : (
-                  <>
-                    <a
-                      className="min-w-0 flex-1 truncate text-blue-700 hover:underline"
-                      href={new URL(material.url, API_BASE_URL).toString()}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      {material.title}
-                    </a>
-                    <button
-                      className="rounded border border-slate-300 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                      disabled={isSavingEdit || deletingMaterialId !== null}
-                      onClick={() => {
-                        setEditedTitle(material.title)
-                        setEditingMaterialId(material.id)
-                        setErrorMessage('')
-                      }}
-                      type="button"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="rounded border border-red-200 px-3 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
-                      disabled={isSavingEdit || deletingMaterialId !== null}
-                      onClick={() => handleDelete(material)}
-                      type="button"
-                    >
-                      {deletingMaterialId === material.id ? 'Deleting…' : 'Delete'}
-                    </button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {editingCourse && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isSavingEdit) setEditingCourse(null)
+          }}
+        >
+          <section
+            aria-labelledby="edit-course-heading"
+            aria-modal="true"
+            className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl"
+            role="dialog"
+          >
+            <h2 className="text-xl font-bold text-primary" id="edit-course-heading">Edit course</h2>
+            <form className="mt-5 space-y-4" onSubmit={handleEditSubmit}>
+              <label className="block text-sm font-semibold" htmlFor="edit-course-title">
+                Course title
+                <input
+                  className="mt-1 block w-full rounded-xl border border-subtle-border px-4 py-3 font-normal"
+                  id="edit-course-title"
+                  maxLength="255"
+                  onChange={(event) => setEditTitle(event.target.value)}
+                  required
+                  value={editTitle}
+                />
+              </label>
+              <label className="block text-sm font-semibold" htmlFor="edit-course-description">
+                Description
+                <textarea
+                  className="mt-1 block w-full rounded-xl border border-subtle-border px-4 py-3 font-normal"
+                  id="edit-course-description"
+                  onChange={(event) => setEditDescription(event.target.value)}
+                  required
+                  rows="4"
+                  value={editDescription}
+                />
+              </label>
+              <label className="block text-sm font-semibold" htmlFor="edit-course-thumbnail">
+                Replace thumbnail (optional)
+                <input
+                  accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+                  className="mt-1 block w-full rounded-xl border border-subtle-border px-4 py-3 font-normal"
+                  id="edit-course-thumbnail"
+                  name="thumbnail"
+                  type="file"
+                />
+              </label>
+              {actionError && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800" role="alert">{actionError}</p>}
+              <div className="flex justify-end gap-3">
+                <button
+                  className="rounded-pill border border-subtle-border px-4 py-2 text-sm font-semibold"
+                  disabled={isSavingEdit}
+                  onClick={() => setEditingCourse(null)}
+                  type="button"
+                >
+                  Cancel
+                </button>
+                <button
+                  className="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  disabled={isSavingEdit}
+                  type="submit"
+                >
+                  {isSavingEdit ? 'Saving…' : 'Save changes'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </section>
   )
 }

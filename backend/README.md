@@ -21,6 +21,19 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Instructor Portal Setup
+
+Students sign in at `/login`; instructors sign in at `/instructor/login`. Student sessions return to the public course catalog, while instructor sessions open the instructor dashboard. Public course browsing and viewing remain available without signing in; instructor write endpoints enforce the `is_instructor` role on the server.
+
+To create or update the initial instructor account, set `INSTRUCTOR_NAME`, `INSTRUCTOR_EMAIL`, and `INSTRUCTOR_PASSWORD` in `.env`. Use a unique password of at least 12 characters, then run:
+
+```bash
+php artisan migrate
+php artisan db:seed --class=InstructorSeeder
+```
+
+The seeder does nothing when all three variables are empty and fails if only some are set. Open `/instructor/login` in the frontend to sign in.
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
