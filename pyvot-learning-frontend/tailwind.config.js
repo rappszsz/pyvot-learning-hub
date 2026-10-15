@@ -1,13 +1,14 @@
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
-        primary: '#6D28D9',
-        accent: '#6D28D9',
+        primary: '#EC4899',
+        accent: '#D946EF',
         secondary: {
-          DEFAULT: '#F472B6',
-          peach: '#FDBA9A',
+          DEFAULT: '#EC4899',
+          peach: '#F9A8D4',
         },
         background: '#FDF8F5',
         text: '#374151',
@@ -18,7 +19,7 @@ export default {
         },
       },
       backgroundImage: {
-        'register-gradient': 'linear-gradient(110deg, #F472B6 0%, #FDBA9A 100%)',
+        'register-gradient': 'linear-gradient(110deg, #EC4899 0%, #D946EF 100%)',
       },
       borderRadius: {
         DEFAULT: '1rem',

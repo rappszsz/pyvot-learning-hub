@@ -48,6 +48,10 @@ function InstructorCourseManagement() {
 
   if (!course) return <Navigate replace to="/" />
 
+  const posterUrl = course.thumbnail
+    ? new URL(`/storage/${course.thumbnail}`, API_BASE_URL).toString()
+    : undefined
+
   function openCourseEditor() {
     setCourseTitle(course.title)
     setCourseDescription(course.description)
@@ -369,7 +373,7 @@ function InstructorCourseManagement() {
                   </div>
 
                   {isVideo ? (
-                    <video className="aspect-video w-full rounded bg-slate-950" controls preload="metadata">
+                    <video className="aspect-video w-full rounded bg-slate-950" controls muted={false} poster={posterUrl} preload="metadata">
                       <source src={materialUrl} type={material.mime_type} />
                       Your browser does not support video playback.
                     </video>

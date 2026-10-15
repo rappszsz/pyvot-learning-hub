@@ -30,7 +30,7 @@ function FileDropzone({ accept, files, label, name, onChange, onRemove }) {
           }}
           type="file"
         />
-        <div aria-hidden="true" className="mx-auto mb-3 grid size-10 place-items-center rounded-full bg-[#f2eafa] text-primary">
+        <div aria-hidden="true" className="mx-auto mb-3 grid size-10 place-items-center rounded-full bg-pink-100 text-primary">
           <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.8">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0L8 8m4-4 4 4M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
           </svg>
@@ -150,7 +150,7 @@ function InstructorUpload() {
             <div className="space-y-6">
               <section className="rounded-2xl border border-subtle-border bg-white p-6 shadow-[0_12px_35px_rgba(61,40,72,0.05)] sm:p-8">
                 <div className="mb-6 flex items-center gap-3">
-                  <span className="grid size-9 place-items-center rounded-full bg-[#f2eafa] text-sm font-bold text-primary">01</span>
+                  <span className="grid size-9 place-items-center rounded-full bg-pink-100 text-sm font-bold text-primary">01</span>
                   <div>
                     <h2 className="font-bold text-[#30263a]">Course details</h2>
                     <p className="text-sm text-slate-500">Set the title and overview.</p>
@@ -190,7 +190,7 @@ function InstructorUpload() {
                   Course Thumbnail Image
                   <input
                     accept="image/jpeg,image/png,.jpg,.jpeg,.png"
-                    className="mt-2 block w-full rounded-xl border border-subtle-border bg-background px-4 py-3 font-normal file:mr-4 file:rounded-pill file:border-0 file:bg-[#f2eafa] file:px-4 file:py-2 file:font-semibold file:text-primary"
+                    className="mt-2 block w-full rounded-xl border border-subtle-border bg-background px-4 py-3 font-normal file:mr-4 file:rounded-pill file:border-0 file:bg-pink-100 file:px-4 file:py-2 file:font-semibold file:text-primary"
                     id="course-thumbnail"
                     name="thumbnail"
                     type="file"
@@ -203,7 +203,7 @@ function InstructorUpload() {
 
               <section className="rounded-2xl border border-subtle-border bg-white p-6 shadow-[0_12px_35px_rgba(61,40,72,0.05)] sm:p-8">
                 <div className="mb-6 flex items-center gap-3">
-                  <span className="grid size-9 place-items-center rounded-full bg-[#f2eafa] text-sm font-bold text-primary">02</span>
+                  <span className="grid size-9 place-items-center rounded-full bg-pink-100 text-sm font-bold text-primary">02</span>
                   <div>
                     <h2 className="font-bold text-[#30263a]">Module details</h2>
                     <p className="text-sm text-slate-500">Give this learning section a clear focus.</p>
@@ -270,7 +270,7 @@ function InstructorUpload() {
                 </p>
               )}
               <button
-                className="mt-6 w-full rounded-pill bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#5b21b6] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-6 w-full rounded-pill bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-pink-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isSubmitting}
                 type="submit"
               >

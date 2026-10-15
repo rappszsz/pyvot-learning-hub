@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { API_BASE_URL } from '../lib/api.js'
+import { API_BASE_URL, fetchWithAuth } from '../lib/api.js'
 
 function ProtectedRoute() {
   const location = useLocation()
@@ -13,9 +13,7 @@ function ProtectedRoute() {
 
     async function checkStudentSession() {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/user`, {
-          credentials: 'include',
-          headers: { Accept: 'application/json' },
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/auth/user`, {
           signal: controller.signal,
         })
         const result = await response.json()
@@ -58,7 +56,7 @@ function ProtectedRoute() {
       </div>
     )
   }
-  if (status === 'instructor' && location.pathname !== '/') {
+  if (status === 'instructor' && location.pathname !== '/' && location.pathname !== '/profile') {
     return <Navigate replace to="/instructor/dashboard" />
   }
   if (status === 'unauthenticated') {

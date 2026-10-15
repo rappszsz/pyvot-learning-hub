@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import heroImage from '../assets/hero.png'
 import pyvotLogo from '../assets/pyvot-logo.png'
+import UserDrawer from '../components/UserDrawer.jsx'
 import { useCourseCatalog } from '../context/CourseContext.jsx'
-import { API_BASE_URL, fetchWithCsrf } from '../lib/api.js'
+import { API_BASE_URL, fetchWithAuth, fetchWithCsrf } from '../lib/api.js'
 
 const serviceLinks = [
   { label: 'Business Solutions', href: '#course-catalog' },
@@ -18,8 +20,8 @@ function CourseCard({ course }) {
     : null
 
   return (
-    <li className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
-      <div className="flex h-40 items-center justify-center bg-gray-50 font-medium text-gray-400">
+    <li className="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div className="flex h-40 items-center justify-center bg-gray-50 font-medium text-gray-400 dark:bg-slate-700 dark:text-slate-300">
         {thumbnailUrl ? (
           <img
             alt={course.title}
@@ -31,23 +33,23 @@ function CourseCard({ course }) {
         )}
       </div>
       <div className="flex-1 p-5">
-        <span className="text-xs font-semibold uppercase tracking-wider text-purple-600">
+        <span className="text-xs font-semibold uppercase tracking-wider text-pink-600">
           {course.category_track || 'COURSE'}
         </span>
-        <h3 className="mt-1 text-lg font-bold text-gray-900">{course.title}</h3>
-        <p className="mt-1 line-clamp-2 text-sm text-gray-600">{course.description}</p>
-        <p className="mt-3 text-sm font-medium text-gray-600">
+        <h3 className="mt-1 text-lg font-bold text-gray-900 dark:text-white">{course.title}</h3>
+        <p className="mt-1 line-clamp-2 text-sm text-gray-600 dark:text-slate-300">{course.description}</p>
+        <p className="mt-3 text-sm font-medium text-gray-600 dark:text-slate-300">
           {lessons} {lessons === 1 ? 'lesson' : 'lessons'}
           {studyMaterials > 0 && (
-            <span className="font-normal text-gray-500">
+            <span className="font-normal text-gray-500 dark:text-slate-400">
               {' '}· {studyMaterials} {studyMaterials === 1 ? 'study material' : 'study materials'}
             </span>
           )}
         </p>
       </div>
-      <div className="flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50 px-5 py-4">
+      <div className="flex items-center justify-between gap-2 border-t border-gray-100 bg-gray-50 px-5 py-4 dark:border-slate-700 dark:bg-slate-800">
         <Link
-          className="flex-1 rounded-xl bg-purple-600 px-3 py-2 text-center text-sm font-medium text-white transition hover:bg-purple-700"
+          className="flex-1 rounded-xl bg-pink-600 px-3 py-2 text-center text-sm font-medium text-white transition hover:bg-pink-700"
           to={`/courses/${course.id}`}
         >
           View Course
@@ -60,7 +62,7 @@ function CourseCard({ course }) {
 function CatalogPage() {
   const { courses, isLoading, errorMessage } = useCourseCatalog()
   const navigate = useNavigate()
-  const [isStudentSignedIn, setIsStudentSignedIn] = useState(false)
+  const [user, setUser] = useState(null)
   const [authError, setAuthError] = useState('')
   const [isSigningOut, setIsSigningOut] = useState(false)
 
@@ -69,26 +71,24 @@ function CatalogPage() {
 
     async function checkStudentSession() {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/user`, {
-          credentials: 'include',
-          headers: { Accept: 'application/json' },
+        const response = await fetchWithAuth(`${API_BASE_URL}/api/auth/user`, {
           signal: controller.signal,
         })
         const result = await response.json()
 
         if (response.status === 401 || response.status === 403) {
-          setIsStudentSignedIn(false)
+          setUser(null)
           return
         }
         if (!response.ok) {
           throw new Error(result.message || 'Unable to verify student sign-in.')
         }
 
-        setIsStudentSignedIn(result.user?.is_instructor === false)
+        setUser(result.user || null)
       } catch (error) {
         if (!(error instanceof Error && error.name === 'AbortError')) {
           setAuthError(error instanceof Error ? error.message : 'Unable to verify student sign-in.')
-          setIsStudentSignedIn(false)
+          setUser(null)
         }
       }
     }
@@ -109,8 +109,10 @@ function CatalogPage() {
         throw new Error(result.message || 'Unable to sign out.')
       }
 
-      setIsStudentSignedIn(false)
-      navigate('/login', { replace: true })
+      window.localStorage.removeItem('auth_token')
+      window.localStorage.removeItem('auth_user')
+      setUser(null)
+      navigate(user?.is_instructor ? '/instructor/login' : '/login', { replace: true })
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : 'Unable to sign out.')
     } finally {
@@ -119,17 +121,17 @@ function CatalogPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-text">
-      <header className="border-b border-subtle-border bg-background">
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-x-8 gap-y-4 px-4 py-5 sm:px-6 lg:px-8">
-          <Link aria-label="Pyvot home" className="flex items-center" to="/">
-            <img alt="Pyvot Logo" className="h-12 w-auto" src={pyvotLogo} />
+    <div className="min-h-screen bg-background text-text transition-colors dark:bg-slate-900 dark:text-white">
+      <header className="border-b border-subtle-border bg-background dark:border-slate-700 dark:bg-slate-900">
+        <div className="mx-auto flex min-h-20 w-full max-w-7xl flex-wrap items-center justify-between gap-x-8 gap-y-4 px-4 py-3 sm:px-6 lg:px-8">
+          <Link aria-label="Pyvot home" className="flex shrink-0 items-center" to="/">
+            <img alt="Pyvot Logo" className="h-12 w-auto object-contain object-left md:h-14 lg:h-16" src={pyvotLogo} />
           </Link>
 
           <nav aria-label="Main navigation" className="flex flex-1 flex-wrap items-center gap-x-6 gap-y-2 lg:ml-8">
             {serviceLinks.map((item) => (
               <a
-                className="text-sm font-medium text-text transition-colors hover:text-primary"
+                className="text-sm font-medium text-text transition-colors hover:text-primary dark:text-slate-300"
                 href={item.href}
                 key={item.label}
               >
@@ -140,23 +142,20 @@ function CatalogPage() {
 
           <div className="flex items-center gap-3">
             <a
-              className="rounded-pill px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-white/70"
+              className="rounded-pill px-4 py-2 text-sm font-semibold text-primary transition-colors hover:bg-white/70 dark:hover:bg-slate-800"
               href="#course-catalog"
             >
               Explore Courses
             </a>
-            {isStudentSignedIn ? (
-              <button
-                className="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
-                disabled={isSigningOut}
-                onClick={handleSignOut}
-                type="button"
-              >
-                {isSigningOut ? 'Signing out…' : 'Sign Out'}
-              </button>
+            {user ? (
+              <UserDrawer
+                isSigningOut={isSigningOut}
+                onSignOut={handleSignOut}
+                user={user}
+              />
             ) : (
               <Link
-                className="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-pink-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 to="/login"
               >
                 Sign In
@@ -170,21 +169,26 @@ function CatalogPage() {
       <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12 lg:px-8">
         <section
           aria-labelledby="welcome-heading"
-          className="rounded-3xl bg-subtle-card px-6 py-10 sm:px-10 sm:py-14 lg:px-14"
+          className="relative isolate overflow-hidden rounded-3xl border border-slate-200 bg-slate-900 bg-cover bg-center px-8 py-12 shadow-xl dark:border-slate-800 sm:px-10 sm:py-14 md:px-12 lg:px-14"
           id="welcome"
+          style={{
+            backgroundImage: `linear-gradient(90deg, rgb(15 23 42 / 92%), rgb(88 28 135 / 78%)), url("${heroImage}")`,
+          }}
         >
-          <p className="mb-3 text-sm font-bold uppercase tracking-wider text-primary">
+          <p className="mb-3 text-sm font-bold uppercase tracking-wider text-pink-200">
             Your next step starts here
           </p>
-          <h1 className="max-w-3xl text-4xl font-bold leading-tight text-primary sm:text-5xl" id="welcome-heading">
+          <h1 className="max-w-3xl text-4xl font-bold leading-tight text-white sm:text-5xl" id="welcome-heading">
             Welcome to Pyvot Learning.
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-text sm:text-lg">
+          <p className="mt-5 max-w-2xl text-base leading-7 text-white/90 sm:text-lg">
             Build practical skills with flexible courses designed to help you grow your career and reach your goals.
           </p>
         </section>
 
-        <section aria-labelledby="catalog-heading" className="pt-12 sm:pt-16" id="course-catalog">
+        <div aria-hidden="true" className="my-10 border-b border-gray-200 dark:border-slate-800 md:my-14" />
+
+        <section aria-labelledby="catalog-heading" id="course-catalog">
           <div className="mb-7 flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="mb-2 text-sm font-semibold text-primary">Learn at your pace</p>
@@ -193,22 +197,22 @@ function CatalogPage() {
               </h2>
             </div>
             {!isLoading && !errorMessage && (
-              <p className="text-sm text-text">
+              <p className="text-sm text-text dark:text-slate-400">
                 {courses.length} {courses.length === 1 ? 'course' : 'courses'} available
               </p>
             )}
           </div>
 
           {isLoading ? (
-            <p className="rounded-2xl bg-subtle-card p-6 text-sm text-text" role="status">
+            <p className="rounded-2xl bg-subtle-card p-6 text-sm text-text dark:bg-slate-800 dark:text-slate-300" role="status">
               Loading courses…
             </p>
           ) : errorMessage ? (
-            <p className="rounded-2xl bg-subtle-card p-6 text-sm text-text" role="alert">
+            <p className="rounded-2xl bg-subtle-card p-6 text-sm text-text dark:bg-slate-800 dark:text-slate-300" role="alert">
               {errorMessage}
             </p>
           ) : courses.length === 0 ? (
-            <p className="rounded-2xl bg-subtle-card p-6 text-sm text-text">
+            <p className="rounded-2xl bg-subtle-card p-6 text-sm text-text dark:bg-slate-800 dark:text-slate-300">
               No courses are available yet. Please check back soon.
             </p>
           ) : (
@@ -221,7 +225,7 @@ function CatalogPage() {
         </section>
       </main>
 
-      <footer className="border-t border-subtle-border px-4 py-6 text-center text-sm text-text sm:px-6 lg:px-8">
+      <footer className="border-t border-subtle-border px-4 py-6 text-center text-sm text-text dark:border-slate-700 dark:text-slate-400 sm:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-7xl">Pyvot © 2026</div>
       </footer>
     </div>

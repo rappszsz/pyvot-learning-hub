@@ -7,15 +7,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('web')->group(function (): void {
     Route::get('/auth/csrf', [InstructorAuthController::class, 'csrfToken']);
+    Route::post('/register', [InstructorAuthController::class, 'register'])->middleware('throttle:6,1');
     Route::post('/auth/login', [InstructorAuthController::class, 'login'])->middleware('throttle:6,1');
     Route::post('/auth/student/login', [InstructorAuthController::class, 'studentLogin'])->middleware('throttle:6,1');
 
-    Route::middleware('auth')->group(function (): void {
+    Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/auth/user', [InstructorAuthController::class, 'user']);
+        Route::put('/auth/profile', [InstructorAuthController::class, 'updateProfile']);
+        Route::put('/auth/password', [InstructorAuthController::class, 'updatePassword']);
         Route::post('/auth/logout', [InstructorAuthController::class, 'logout']);
     });
 
-    Route::middleware(['auth', 'instructor'])->group(function (): void {
+    Route::middleware(['auth:sanctum', 'instructor'])->group(function (): void {
         Route::post('/courses', [CourseController::class, 'store']);
         Route::put('/courses/{course}', [CourseController::class, 'update']);
         Route::patch('/courses/{course}', [CourseController::class, 'update']);

@@ -42,16 +42,16 @@ function InstructorLogin() {
   }
 
   return (
-    <section className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <p className="text-sm font-semibold uppercase tracking-wide text-primary">Instructor portal</p>
-      <h1 className="mt-2 text-2xl font-bold">Sign in</h1>
-      <p className="mt-2 text-sm text-slate-600">Sign in with your instructor account to manage courses and materials.</p>
-      <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-        <label className="block text-sm font-semibold" htmlFor="instructor-email">
+    <section>
+      <p className="text-sm font-semibold uppercase tracking-[0.16em] text-purple-700 dark:text-purple-300">Instructor portal</p>
+      <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Welcome back</h1>
+      <p className="mt-3 text-base text-slate-600 dark:text-slate-400">Sign in with your instructor account to manage courses and materials.</p>
+      <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+        <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200" htmlFor="instructor-email">
           Email
           <input
             autoComplete="username"
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2 font-normal"
+            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             id="instructor-email"
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -59,11 +59,11 @@ function InstructorLogin() {
             value={email}
           />
         </label>
-        <label className="block text-sm font-semibold" htmlFor="instructor-password">
+        <label className="block text-sm font-semibold text-slate-800 dark:text-slate-200" htmlFor="instructor-password">
           Password
           <input
             autoComplete="current-password"
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2 font-normal"
+            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             id="instructor-password"
             onChange={(event) => setPassword(event.target.value)}
             required
@@ -71,16 +71,16 @@ function InstructorLogin() {
             value={password}
           />
         </label>
-        {errorMessage && <p className="rounded bg-red-50 p-3 text-sm text-red-800" role="alert">{errorMessage}</p>}
+        {errorMessage && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800" role="alert">{errorMessage}</p>}
         <button
-          className="w-full rounded bg-slate-900 px-4 py-2 font-semibold text-white disabled:opacity-50"
+          className="w-full rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white shadow-md shadow-purple-200 transition-all hover:bg-purple-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitting}
           type="submit"
         >
           {isSubmitting ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
-      <Link className="mt-5 inline-block text-sm font-semibold text-blue-700 hover:underline" to="/login">
+      <Link className="mt-7 inline-block text-sm font-medium text-purple-600 transition-colors hover:text-purple-700 hover:underline" to="/login">
         Sign in as Student
       </Link>
     </section>

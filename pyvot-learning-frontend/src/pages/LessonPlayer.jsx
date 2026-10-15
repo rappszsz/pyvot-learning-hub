@@ -10,10 +10,13 @@ function LessonPlayer() {
   if (!lesson) return <Navigate replace to="/" />
 
   const videoUrl = new URL(`/storage/${lesson.path}`, API_BASE_URL).toString()
+  const posterUrl = course.thumbnail
+    ? new URL(`/storage/${course.thumbnail}`, API_BASE_URL).toString()
+    : undefined
 
   return (
     <article>
-      <video className="aspect-video w-full rounded bg-slate-950" controls preload="metadata">
+      <video className="aspect-video w-full rounded bg-slate-950" controls muted={false} poster={posterUrl} preload="metadata">
         <source src={videoUrl} type={lesson.mime_type} />
         Your browser does not support video playback.
       </video>
