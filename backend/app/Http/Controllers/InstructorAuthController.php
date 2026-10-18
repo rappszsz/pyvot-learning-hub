@@ -66,7 +66,9 @@ class InstructorAuthController extends Controller
 
         $user = $request->user();
 
-        if ((bool) $user?->is_instructor !== $forInstructor) {
+        $hasStudioAccess = (bool) ($user?->is_instructor || $user?->is_admin);
+
+        if ($hasStudioAccess !== $forInstructor) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -129,7 +131,7 @@ class InstructorAuthController extends Controller
     }
 
     /**
-     * @return array{id: int, name: string, email: string, bio: ?string, is_instructor: bool, subscription_status: string, subscription_ends_at: ?string, is_subscribed: bool}
+     * @return array{id: int, name: string, email: string, bio: ?string, is_instructor: bool, is_admin: bool, subscription_status: string, subscription_ends_at: ?string, is_subscribed: bool}
      */
     private function userDetails(User $user): array
     {
@@ -139,6 +141,7 @@ class InstructorAuthController extends Controller
             'email' => $user->email,
             'bio' => $user->bio,
             'is_instructor' => $user->is_instructor,
+            'is_admin' => $user->is_admin,
             'subscription_status' => $user->subscription_status,
             'subscription_ends_at' => $user->subscription_ends_at?->toISOString(),
             'is_subscribed' => $user->isSubscribed(),

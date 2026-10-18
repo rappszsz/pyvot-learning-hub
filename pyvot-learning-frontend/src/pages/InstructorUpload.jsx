@@ -270,7 +270,7 @@ function InstructorUpload() {
                 </p>
               )}
               <button
-                className="mt-6 w-full rounded-pill bg-primary px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-pink-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn-primary mt-6 w-full text-sm disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={isSubmitting}
                 type="submit"
               >

@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import { API_BASE_URL, fetchWithCsrf } from '../lib/api.js'
 
 function StudentLogin() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const { setUser } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -29,7 +32,13 @@ function StudentLogin() {
         throw new Error('This account cannot sign in to the student portal.')
       }
 
-      navigate('/', { replace: true })
+      window.localStorage.setItem('auth_user', JSON.stringify(result.user))
+      setUser(result.user)
+      const returnTo = location.state?.from
+      const destination = returnTo?.pathname === '/pricing'
+        ? `${returnTo.pathname}${returnTo.search || ''}`
+        : '/'
+      navigate(destination, { replace: true })
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to sign in.')
     } finally {
@@ -47,7 +56,7 @@ function StudentLogin() {
           Email
           <input
             autoComplete="username"
-            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-white/10 dark:bg-[#1E1F30] dark:text-white"
             id="student-email"
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -59,7 +68,7 @@ function StudentLogin() {
           Password
           <input
             autoComplete="current-password"
-            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-white/10 dark:bg-[#1E1F30] dark:text-white"
             id="student-password"
             onChange={(event) => setPassword(event.target.value)}
             required
@@ -69,7 +78,7 @@ function StudentLogin() {
         </label>
         {errorMessage && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800" role="alert">{errorMessage}</p>}
         <button
-          className="w-full rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white shadow-md shadow-purple-200 transition-all hover:bg-purple-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitting}
           type="submit"
         >

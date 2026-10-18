@@ -18,6 +18,11 @@ function InstructorDashboard() {
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [deletingCourseId, setDeletingCourseId] = useState(null)
   const [actionError, setActionError] = useState('')
+  const totalMaterials = courses.reduce((total, course) => total + course.materials.length, 0)
+  const totalVideoLessons = courses.reduce(
+    (total, course) => total + course.materials.filter((material) => material.mime_type.startsWith('video/')).length,
+    0,
+  )
 
   function openEdit(course) {
     setEditingCourse(course)
@@ -93,14 +98,14 @@ function InstructorDashboard() {
 
   return (
     <section>
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4" id="course-management">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">Instructor studio</p>
           <h1 className="mt-2 text-3xl font-bold">Course management</h1>
           <p className="mt-2 text-slate-600">Create, edit, and manage your courses and learning materials.</p>
         </div>
         <Link
-          className="rounded bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          className="btn-primary text-sm"
           to="/instructor/courses/create"
         >
           Create a course
@@ -112,6 +117,22 @@ function InstructorDashboard() {
           Manage all materials
         </Link>
       </div>
+
+      <section aria-labelledby="instructor-analytics-heading" className="mt-8" id="analytics">
+        <h2 className="text-lg font-semibold" id="instructor-analytics-heading">Analytics overview</h2>
+        <dl className="mt-3 grid gap-4 sm:grid-cols-3">
+          {[
+            { label: 'Courses', value: courses.length },
+            { label: 'Video lessons', value: totalVideoLessons },
+            { label: 'Study materials', value: totalMaterials - totalVideoLessons },
+          ].map((metric) => (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-[#2E2A47] dark:bg-[#181628]" key={metric.label}>
+              <dt className="text-sm text-slate-500 dark:text-slate-400">{metric.label}</dt>
+              <dd className="mt-1 text-2xl font-bold">{metric.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       {actionError && (
         <p className="mt-5 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
@@ -225,7 +246,7 @@ function InstructorDashboard() {
                   Cancel
                 </button>
                 <button
-                  className="rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  className="btn-primary text-sm disabled:opacity-50"
                   disabled={isSavingEdit}
                   type="submit"
                 >

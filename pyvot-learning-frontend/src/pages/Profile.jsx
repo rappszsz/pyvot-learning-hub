@@ -5,7 +5,7 @@ import { API_BASE_URL, fetchWithAuth, fetchWithCsrf } from '../lib/api.js'
 const tabs = ['Personal Info', 'Security', 'Subscription']
 
 const inputClassName =
-  'mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white'
+  'mt-2 block w-full rounded-xl border border-[#F0EBE1] bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-200 dark:border-white/10 dark:bg-[#1E1F30] dark:text-white'
 
 function Profile() {
   const [user, setUser] = useState(null)
@@ -148,8 +148,8 @@ function Profile() {
         <p className="mt-2 text-slate-600 dark:text-slate-400">Manage your personal details, security, and subscription.</p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <div aria-label="Profile settings" className="flex overflow-x-auto border-b border-slate-200 px-4 dark:border-slate-700 sm:px-6" role="tablist">
+      <div className="overflow-hidden rounded-3xl border border-[#F0EBE1] bg-white shadow-sm dark:border-[#383254] dark:bg-[#1A182B]/80 dark:shadow-2xl">
+        <div aria-label="Profile settings" className="flex overflow-x-auto border-b border-[#F0EBE1] px-4 dark:border-[#2E2A47] sm:px-6" role="tablist">
           {tabs.map((tab) => (
             <button
               aria-selected={activeTab === tab}
@@ -241,7 +241,7 @@ function Profile() {
                   <span className="mt-1 block text-right text-xs font-normal text-slate-500 dark:text-slate-400">{bio.length}/1000</span>
                 </label>
                 <button
-                  className="rounded-xl bg-pink-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="btn-primary text-sm disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isSubmitting}
                   type="submit"
                 >
@@ -292,7 +292,7 @@ function Profile() {
                   />
                 </label>
                 <button
-                  className="rounded-xl bg-pink-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-pink-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="btn-primary text-sm disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isSubmitting}
                   type="submit"
                 >
@@ -305,10 +305,10 @@ function Profile() {
           {activeTab === 'Subscription' && (
             <div aria-labelledby="profile-tab-subscription" role="tabpanel">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Your subscription</h2>
-              <dl className="mt-5 divide-y divide-slate-100 rounded-xl border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
+              <dl className="mt-5 divide-y divide-[#F0EBE1] rounded-xl border border-[#F0EBE1] dark:divide-[#2E2A47] dark:border-[#2E2A47]">
                 <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4">
                   <dt className="text-sm text-slate-600 dark:text-slate-400">Status</dt>
-                  <dd className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold capitalize text-slate-800 dark:bg-slate-700 dark:text-slate-200">
+                  <dd className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold capitalize text-slate-800 dark:bg-[#231F3A] dark:text-slate-200">
                     {user.subscription_status || 'inactive'}
                   </dd>
                 </div>
@@ -318,7 +318,7 @@ function Profile() {
                 </div>
               </dl>
               <Link
-                className="mt-6 inline-flex rounded-xl bg-pink-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-pink-700"
+                className="btn-primary mt-6 text-sm"
                 to="/pricing"
               >
                 Upgrade or Manage Subscription

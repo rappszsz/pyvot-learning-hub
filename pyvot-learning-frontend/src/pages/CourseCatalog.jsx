@@ -24,7 +24,7 @@ function CourseCatalog() {
               {course.lessons.length} {course.lessons.length === 1 ? 'lesson' : 'lessons'}
             </p>
             <Link
-              className="mt-5 inline-block text-sm font-semibold text-blue-700 hover:underline"
+              className="btn-primary mt-5 text-sm"
               to={`/courses/${course.id}`}
             >
               View Course

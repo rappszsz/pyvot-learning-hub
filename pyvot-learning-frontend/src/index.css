@@ -13,9 +13,24 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
+  background-color: #faf7f2;
+}
+
+.dark body {
+  background-color: #12111d;
 }
 
 button,
 input {
   font: inherit;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-gradient-to-r from-[#FF7A68] via-[#E6627C] to-[#8C52BA] px-6 py-2.5 font-medium text-white shadow-md ring-2 ring-[#FF7A68]/20 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.02] hover:opacity-95 hover:shadow-lg hover:shadow-purple-500/30 active:scale-[0.97] dark:hover:shadow-pink-500/30;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#7B51B3] via-[#BF5A8E] to-[#F17478] px-6 py-2.5 font-medium text-white shadow-md transition-all duration-200 ease-out hover:-translate-y-0.5 hover:scale-[1.02] hover:opacity-95 hover:shadow-lg hover:shadow-purple-500/30 active:scale-[0.97] dark:hover:shadow-pink-500/30;
+  }
 }

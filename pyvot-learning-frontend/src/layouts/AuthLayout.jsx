@@ -44,7 +44,7 @@ function AuthLayout() {
         </p>
       </aside>
 
-      <main className="flex min-h-[60vh] items-center justify-center bg-white px-6 py-12 text-slate-900 transition-colors dark:bg-slate-900 dark:text-white sm:px-10 lg:col-span-7 lg:min-h-screen lg:px-12 lg:py-16">
+      <main className="flex min-h-[60vh] items-center justify-center bg-[#FAF7F2] px-6 py-12 text-slate-900 transition-colors dark:bg-[#12111D] dark:text-slate-100 sm:px-10 lg:col-span-7 lg:min-h-screen lg:px-12 lg:py-16">
         <div className="w-full max-w-xl">
           <Outlet />
         </div>

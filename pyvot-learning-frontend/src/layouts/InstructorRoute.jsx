@@ -25,7 +25,11 @@ function InstructorRoute() {
         if (!response.ok) {
           throw new Error(result.message || 'Unable to verify instructor access.')
         }
-        if (result.user?.is_instructor !== true) {
+        const canAccessStudio =
+          result.user?.role === 'admin' ||
+          result.user?.is_admin ||
+          result.user?.is_instructor === true
+        if (!canAccessStudio) {
           setStatus('unauthenticated')
           return
         }

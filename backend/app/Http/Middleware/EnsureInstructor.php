@@ -10,7 +10,7 @@ class EnsureInstructor
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()?->is_instructor) {
+        if (! $request->user()?->is_instructor && ! $request->user()?->is_admin) {
             return response()->json(['message' => 'Instructor access is required.'], 403);
         }
 

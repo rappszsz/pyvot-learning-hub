@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import { API_BASE_URL, fetchWithCsrf } from '../lib/api.js'
 
 function Register() {
   const navigate = useNavigate()
+  const { setUser } = useAuth()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -50,7 +52,8 @@ function Register() {
 
       window.localStorage.setItem('auth_token', result.token)
       window.localStorage.setItem('auth_user', JSON.stringify(result.user))
-      navigate('/', { replace: true })
+      setUser(result.user)
+      navigate('/pricing', { replace: true })
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Unable to create your account.')
     } finally {
@@ -68,7 +71,7 @@ function Register() {
           Name
           <input
             autoComplete="name"
-            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-white/10 dark:bg-[#1E1F30] dark:text-white"
             id="student-name"
             onChange={(event) => setName(event.target.value)}
             required
@@ -80,7 +83,7 @@ function Register() {
           Email Address
           <input
             autoComplete="email"
-            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+            className="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-white/10 dark:bg-[#1E1F30] dark:text-white"
             id="student-email"
             onChange={(event) => setEmail(event.target.value)}
             required
@@ -93,7 +96,7 @@ function Register() {
           <span className="relative mt-2 block">
             <input
               autoComplete="new-password"
-              className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-11 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-11 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-white/10 dark:bg-[#1E1F30] dark:text-white"
               id="student-password"
               minLength="8"
               onChange={(event) => setPassword(event.target.value)}
@@ -129,7 +132,7 @@ function Register() {
           <span className="relative mt-2 block">
             <input
               autoComplete="new-password"
-              className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-11 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+              className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pr-11 font-normal text-slate-900 outline-none transition focus:border-purple-500 focus:ring-2 focus:ring-purple-500 dark:border-white/10 dark:bg-[#1E1F30] dark:text-white"
               id="student-password-confirmation"
               onChange={(event) => setPasswordConfirmation(event.target.value)}
               required
@@ -161,11 +164,18 @@ function Register() {
         </label>
         {errorMessage && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-800" role="alert">{errorMessage}</p>}
         <button
-          className="w-full rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white shadow-md shadow-purple-200 transition-all hover:bg-purple-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-primary group w-full disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitting}
           type="submit"
         >
-          {isSubmitting ? 'Registering…' : 'Register'}
+          {isSubmitting ? 'Registering…' : (
+            <>
+              Register
+              <span aria-hidden="true" className="inline-block transition-transform duration-200 ease-out group-hover:translate-x-1.5">
+                →
+              </span>
+            </>
+          )}
         </button>
       </form>
       <p className="mt-6 text-sm text-slate-600 dark:text-slate-400">
